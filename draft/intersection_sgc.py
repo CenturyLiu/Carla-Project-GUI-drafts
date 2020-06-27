@@ -28,8 +28,8 @@ pygame.font.init()
 pygame.display.set_caption('Intersection view')
 
 # constants
-display_width = 1280
-display_height = 720
+display_width = 1200
+display_height = 800
 
 black = (0,0,0)
 white = (255,255,255)
@@ -139,7 +139,7 @@ def display_vehicle_config(intersection_id, vehicle_uniquename):
 #------Intersection in GUI--------#
 
 class Intersection(object):
-    def __init__(self, guiDisplay, intersection_id, map_surface, intersection_pos, intersection_yaw, world_width, world_offset, display_width = display_width, display_height = display_height):
+    def __init__(self, carla_world, guiDisplay, intersection_id, map_surface, intersection_pos, intersection_yaw, world_width, world_offset, display_width = display_width, display_height = display_height):
         '''
         
 
@@ -163,6 +163,7 @@ class Intersection(object):
         None.
 
         '''
+        self.carla_world = carla_world
         self.intersection_id = str(intersection_id)
         
         # basic settings
@@ -184,7 +185,7 @@ class Intersection(object):
         self.pixel_per_meter = surface_pixel_per_meter
         
         # create the left panel for gui function, and right panel for maps
-        self.left_width = int(self.display_width * 0.3) # unit: pixel
+        self.left_width = int(400) # unit: pixel
         self.left_height = int(self.display_height) # unit: pixel
         self.map_width = int(self.display_width - self.left_width) # unit: pixel
         self.map_height = int(self.display_height) # unit: pixel
@@ -204,7 +205,7 @@ class Intersection(object):
                                                                                    # intersection, in unit of meter
         self.translation_offset = (self.intersection_pos[0] - self.intersection_width / 2 ,self.intersection_pos[1] - self.intersection_width / 2 )
         
-        print(self.translation_offset)
+        #print(self.translation_offset)
         
         self.clipping_rect = pygame.Rect(self.translation_offset[0],
                                     self.translation_offset[1],
@@ -214,6 +215,13 @@ class Intersection(object):
         self.intersection_subsurface = self.map_surface.subsurface(self.clipping_rect)
         self.intersection_subsurface = pygame.transform.smoothscale(self.intersection_subsurface,(int(self.map_width),int(self.map_height)))
         
+        # calculate the meter-per-pixel in the width and height direction of the subsurface
+        # and also get the center of the subsurface
+        self.meter_per_width_pixel = int(self.map_width) / self.intersection_width * (1 / self.pixel_per_meter)
+        self.meter_per_height_pixel = int(self.map_height) / self.intersection_width * (1 / self.pixel_per_meter)
+        self.subsurface_center = (self.map_width / 2 + self.left_width,self.map_height / 2)
+        
+        
         # create a dictionary for vehicles
         self.vehicle_dict = {}
         
@@ -221,14 +229,35 @@ class Intersection(object):
         
         self.create_intersection_panel()
         self.create_spawn_panel()
+    
+    def world_to_local_pixel(self,world_pos):
+        width_diff = (world_pos[0] - self.world_pos[0]) / self.meter_per_width_pixel # unit: pixel
+        height_diff = (world_pos[1] - self.world_pos[1]) / self.meter_per_height_pixel 
+        local_width_pixel = int(width_diff + self.subsurface_center[0])
+        local_height_pixel = int(height_diff + self.subsurface_center[1])
+        return (local_width_pixel,local_height_pixel)
+    
+    def local_pixel_to_world(self,local_map_pos):
+        # input the position of an actor in terms of local map of the intersection
+        # output the global position of the actor
         
+        # be cautious about the yaw of the map. Here I assume yaw = 0 for simplicity
+        
+        #print(self.subsurface_center)
+        #print(self.world_pos)
+        width_diff = (local_map_pos[0] - self.subsurface_center[0]) * self.meter_per_width_pixel # unit: meter
+        height_diff = (local_map_pos[1] - self.subsurface_center[1]) * self.meter_per_height_pixel
+        world_x = width_diff + self.world_pos[0]
+        world_y = height_diff + self.world_pos[1]
+        return (world_x,world_y)
+    
     def create_spawn_panel(self):
         '''
         create the panel for spawning the actors. Here, only spawn vehicle for function demo
 
         '''
-        self.spawn_x_text = sgc.InputBox(label = "x",pos = (50,200), label_side = "left")
-        self.spawn_y_text = sgc.InputBox(label = "y", pos = (50,300), label_side = "left")
+        self.spawn_x_text = sgc.InputBox(label = "x:  ",pos = (50,200), label_side = "left")
+        self.spawn_y_text = sgc.InputBox(label = "y:  ", pos = (50,300), label_side = "left")
         
         self.spawn_label = None # create a label that's going to show the place the user have clicked on the map
         
@@ -270,7 +299,23 @@ class Intersection(object):
         print("trying to spawn vehicle")
         intersection_change_display_mode(self.intersection_id, "Intersection") # after spawning actor, we view the setting of this actor
                                                                                # change display mode to "Vehicle"
+        # get the global position of the actor
+        # note: no error check for non-float type input is applied
+        world_pos_x = self.spawn_x_text.text
+        world_pos_y = self.spawn_y_text.text
+        if world_pos_x != "" and world_pos_y != "":
+            world_pos_x = float(world_pos_x)
+            world_pos_y = float(world_pos_y)
         
+            # now only use carla_world.debug to draw the spawning position
+            location = carla.Location(x=world_pos_x, y=world_pos_y, z=0.0)
+            self.carla_world.debug.draw_point(location, size = 0.1, color = carla.Color(*white), life_time=0.0, persistent_lines=True)
+            
+            # create a vehicle button and draw the button
+            actor_map_pos = self.world_to_local_pixel((world_pos_x,world_pos_y))
+            vehicle_button = VehicleButton(self.intersection_id,"1",actor_map_pos[0],actor_map_pos[1],world_pos_x,world_pos_y,0)
+            vehicle_button.button.add(fade=False)
+            self.vehicle_dict["1"] = vehicle_button
         
         intersection_remove_display(self.intersection_id,"Spawn")
         
@@ -285,13 +330,14 @@ class Intersection(object):
                 if pygame.mouse.get_pressed()[0]:
                     mouse = event.pos
                     if mouse[0] > self.left_width and self.map_height > mouse[1] > 0:
-                        self.spawn_x_text.text = str(mouse[0])
-                        self.spawn_y_text.text = str(mouse[1])
+                        spawn_point_world_pos = self.local_pixel_to_world((mouse[0],mouse[1]))
+                        self.spawn_x_text.text = str(spawn_point_world_pos[0])
+                        self.spawn_y_text.text = str(spawn_point_world_pos[1])
                         # show the position on the map
                         if self.spawn_label != None:
                             self.spawn_label.remove(fade=False)
                         
-                        self.spawn_label = sgc.Label(pos =  (mouse[0],mouse[1]), text = "x: " + str(mouse[0]) + " y: " + str(mouse[1]))
+                        self.spawn_label = sgc.Label(pos =  (mouse[0],mouse[1]), text = "x: " + str(spawn_point_world_pos[0]) + " y: " + str(spawn_point_world_pos[1]))
                     break
                     
 
@@ -317,7 +363,13 @@ class Intersection(object):
     def remove_intersection_page(self):
         self.spawn_actor_button.remove(fade=False)
         
-        
+    def render_all_vehicle(self):
+        for uniquename in self.vehicle_dict:
+            self.vehicle_dict[uniquename].button.add(fade=True)
+    
+    def remove_all_vehicle(self):
+        for uniquename in self.vehicle_dict:
+            self.vehicle_dict[uniquename].button.remove(fade=True)
         
         
     def render_intersection_base(self):
@@ -330,8 +382,8 @@ class Intersection(object):
         display_mode = intersection_get_display_mode(self.intersection_id)
         display_to_remove = intersection_get_display_to_remove(self.intersection_id)
         
-        print("display_mode == ",display_mode)
-        print("display_to_remove == ",display_to_remove)
+        #print("display_mode == ",display_mode)
+        #print("display_to_remove == ",display_to_remove)
         
         if display_to_remove == "Intersection":
             self.remove_intersection_page()
@@ -383,7 +435,7 @@ gui_sgc_Display = sgc.surface.Screen((display_width, display_height))#pygame.dis
 
 
 
-intersection_1 = Intersection(gui_sgc_Display,1,map_surface,intersection_pos,0.0,world_width,world_offset)
+intersection_1 = Intersection(world,gui_sgc_Display,1,map_surface,intersection_pos,0.0,world_width,world_offset)
 
 is_running = True
 clock = pygame.time.Clock()
