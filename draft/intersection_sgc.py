@@ -84,28 +84,29 @@ def create_intersection_config(intersection_id, world_pos, big_map_pos,yaw):
     
     # create config for a specific intersection
     # intersection_id is a string
-    gui_config[intersection_id] = {}
-    gui_config[intersection_id]["world_pos"] = {}
-    gui_config[intersection_id]["world_pos"]["x"] = str(world_pos[0]) # in meter
-    gui_config[intersection_id]["world_pos"]["y"] = str(world_pos[1])  # in meter
-    gui_config[intersection_id]["big_map_pos"] = {}
-    gui_config[intersection_id]["big_map_pos"]["x"] = str(big_map_pos[0]) # in pixel
-    gui_config[intersection_id]["big_map_pos"]["y"] = str(big_map_pos[1])  # in pixel
-    gui_config[intersection_id]["yaw"] = str(yaw)
+    gui_config["Intersection"] = {}
+    gui_config["Intersection"][intersection_id] = {}
+    gui_config["Intersection"][intersection_id]["world_pos"] = {}
+    gui_config["Intersection"][intersection_id]["world_pos"]["x"] = str(world_pos[0]) # in meter
+    gui_config["Intersection"][intersection_id]["world_pos"]["y"] = str(world_pos[1])  # in meter
+    gui_config["Intersection"][intersection_id]["big_map_pos"] = {}
+    gui_config["Intersection"][intersection_id]["big_map_pos"]["x"] = str(big_map_pos[0]) # in pixel
+    gui_config["Intersection"][intersection_id]["big_map_pos"]["y"] = str(big_map_pos[1])  # in pixel
+    gui_config["Intersection"][intersection_id]["yaw"] = str(yaw)
     
     # actors
-    gui_config[intersection_id]["Vehicle"] = {}
-    gui_config[intersection_id]["Traffic light"] = {}
+    gui_config["Intersection"][intersection_id]["Vehicle"] = {}
+    gui_config["Intersection"][intersection_id]["Traffic light"] = {}
     
     # display mode of the intersection
-    gui_config[intersection_id]["display_mode"] = "Intersection" # value can be "Vehicle" or "Spawn" or "Traffic light"
-    gui_config[intersection_id]["Vehicle_to_display"] = "None" # value can be uniquename of a vehicle or "None"
-    gui_config[intersection_id]["display_to_remove"] = "None" # value can be "Vehicle" or "Spawn" or "Traffic light" or "Intersection"
+    gui_config["Intersection"][intersection_id]["display_mode"] = "Intersection" # value can be "Vehicle" or "Spawn" or "Traffic light"
+    gui_config["Intersection"][intersection_id]["Vehicle_to_display"] = "None" # value can be uniquename of a vehicle or "None"
+    gui_config["Intersection"][intersection_id]["display_to_remove"] = "None" # value can be "Vehicle" or "Spawn" or "Traffic light" or "Intersection"
     
     
 def spawn_vehicle_config(intersection_id,vehicle_uniquename,vehicle_map_pos,vehicle_world_pos, yaw):
-    gui_config[intersection_id]["Vehicle"][vehicle_uniquename] = {}
-    vehicle = gui_config[intersection_id]["Vehicle"][vehicle_uniquename]
+    gui_config["Intersection"][intersection_id]["Vehicle"][vehicle_uniquename] = {}
+    vehicle = gui_config["Intersection"][intersection_id]["Vehicle"][vehicle_uniquename]
     vehicle["map_width"] = str(vehicle_map_pos[0])
     vehicle["map_height"] = str(vehicle_map_pos[1])
     vehicle["world_x"] = str(vehicle_world_pos[0])
@@ -117,24 +118,31 @@ def intersection_change_display_mode(intersection_id, mode):
     # "Intersection" or "Vehicle" or "Spawn" or "Traffic light"
     # otherwise, the display mode won't be changed
     if mode in ["Intersection" , "Vehicle" , "Spawn" , "Traffic light"]:
-        gui_config[intersection_id]["display_mode"] = mode
+        gui_config["Intersection"][intersection_id]["display_mode"] = mode
         
 def intersection_remove_display(intersection_id,mode):
     # mode can be only of the following string:
     # "None" or "Intersection" or "Vehicle" or "Spawn" or "Traffic light"
     # otherwise, the display mode won't be changed
     if mode in ["None","Intersection" , "Vehicle" , "Spawn" , "Traffic light"]:
-        gui_config[intersection_id]["display_to_remove"] = mode
+        gui_config["Intersection"][intersection_id]["display_to_remove"] = mode
         
         
 def intersection_get_display_mode(intersection_id):
-    return gui_config[intersection_id]["display_mode"]
+    return gui_config["Intersection"][intersection_id]["display_mode"]
 
 def intersection_get_display_to_remove(intersection_id):
-    return gui_config[intersection_id]["display_to_remove"]
+    return gui_config["Intersection"][intersection_id]["display_to_remove"]
 
 def display_vehicle_config(intersection_id, vehicle_uniquename):
-    gui_config[intersection_id]["Vehicle_to_display"] = vehicle_uniquename
+    gui_config["Intersection"][intersection_id]["Vehicle_to_display"] = vehicle_uniquename
+    
+def get_vehicle_to_display(intersection_id):
+    return gui_config["Intersection"][intersection_id]["Vehicle_to_display"]
+
+def get_vehicle_settings(intersection_id, vehicle_uniquename):
+    vehicle_settings = gui_config["Intersection"][intersection_id]["Vehicle"][vehicle_uniquename]
+    return vehicle_settings
 
 #------Intersection in GUI--------#
 
@@ -200,8 +208,8 @@ class Intersection(object):
         self.intersection_scale = 1
         self.intersection_pos = pos_to_pixel(intersection_pos, self.intersection_scale,pixels_per_meter = self.pixel_per_meter,world_offset = self.world_offset)
         
-        
-        self.intersection_width = world_to_pixel_width(self.intersection_scale, 75,pixels_per_meter = self.pixel_per_meter)# unit: pixel, the "75" here is the width of the 
+        self.intersection_width_meter = 75
+        self.intersection_width = world_to_pixel_width(self.intersection_scale, self.intersection_width_meter,pixels_per_meter = self.pixel_per_meter)# unit: pixel, the "75" here is the width of the 
                                                                                    # intersection, in unit of meter
         self.translation_offset = (self.intersection_pos[0] - self.intersection_width / 2 ,self.intersection_pos[1] - self.intersection_width / 2 )
         
@@ -217,8 +225,12 @@ class Intersection(object):
         
         # calculate the meter-per-pixel in the width and height direction of the subsurface
         # and also get the center of the subsurface
-        self.meter_per_width_pixel = int(self.map_width) / self.intersection_width * (1 / self.pixel_per_meter)
-        self.meter_per_height_pixel = int(self.map_height) / self.intersection_width * (1 / self.pixel_per_meter)
+        
+        #self.meter_per_width_pixel = int(self.map_width) / self.intersection_width * (1 / self.pixel_per_meter)
+        #self.meter_per_height_pixel = int(self.map_height) / self.intersection_width * (1 / self.pixel_per_meter)
+        self.meter_per_width_pixel = self.intersection_width_meter / self.map_width
+        self.meter_per_height_pixel = self.intersection_width_meter / self.map_height
+        
         self.subsurface_center = (self.map_width / 2 + self.left_width,self.map_height / 2)
         
         
@@ -227,8 +239,10 @@ class Intersection(object):
         
         create_intersection_config(self.intersection_id, intersection_pos, self.intersection_pos,self.yaw)
         
+        # create the intresection panel, spawn panel and vehicle panel
         self.create_intersection_panel()
         self.create_spawn_panel()
+        self.create_vehicle_panel()
     
     def world_to_local_pixel(self,world_pos):
         width_diff = (world_pos[0] - self.world_pos[0]) / self.meter_per_width_pixel # unit: pixel
@@ -256,20 +270,23 @@ class Intersection(object):
         create the panel for spawning the actors. Here, only spawn vehicle for function demo
 
         '''
-        self.spawn_x_text = sgc.InputBox(label = "x:  ",pos = (50,200), label_side = "left")
-        self.spawn_y_text = sgc.InputBox(label = "y:  ", pos = (50,300), label_side = "left")
+        self.uniquename_text = sgc.InputBox(label="name:  ",pos = (60,100),label_side = "left")
+        
+        self.spawn_x_text = sgc.InputBox(label = "x:  ",pos = (60,200), label_side = "left")
+        self.spawn_y_text = sgc.InputBox(label = "y:  ", pos = (60,300), label_side = "left")
         
         self.spawn_label = None # create a label that's going to show the place the user have clicked on the map
         
         self.spawn_button = sgc.Button( label="spawn", pos=(int(self.left_width / 2) - 50, self.left_height - 100))
         self.spawn_button.config(on_click=self.spawn_in_intersection)
         
-        self.interactive_mouse_button = sgc.Button(label = " Mouse", pos = (50,100))
+        self.interactive_mouse_button = sgc.Button(label = " Mouse", pos = (260,200))
         self.interactive_mouse_button.on_click = self.interactive_mouse_callback
         
         
     def render_spawn_panel(self):
         # the left panel are spawning settings and a unique spawn button
+        self.uniquename_text.add(fade=False)
         
         self.spawn_x_text.add(fade=False)
         self.spawn_y_text.add(fade=False)
@@ -282,10 +299,13 @@ class Intersection(object):
             self.spawn_label.add(fade=False)
         
     def remove_spawn_page(self):
-        self.spawn_x_text.remove(fade=False)
+        self.uniquename_text.text=""
+        self.uniquename_text.remove(fade=False)
         self.spawn_x_text.text = ""
-        self.spawn_y_text.remove(fade=False)
+        self.spawn_x_text.remove(fade=False)
         self.spawn_y_text.text = ""
+        self.spawn_y_text.remove(fade=False)
+        
         self.spawn_button.remove(fade=False)
         self.interactive_mouse_button.remove(fade=False)
         if self.spawn_label != None:
@@ -303,19 +323,21 @@ class Intersection(object):
         # note: no error check for non-float type input is applied
         world_pos_x = self.spawn_x_text.text
         world_pos_y = self.spawn_y_text.text
-        if world_pos_x != "" and world_pos_y != "":
+        if world_pos_x != "" and world_pos_y != "" and self.uniquename_text.text != "":
             world_pos_x = float(world_pos_x)
             world_pos_y = float(world_pos_y)
-        
+            uniquename = self.uniquename_text.text
             # now only use carla_world.debug to draw the spawning position
             location = carla.Location(x=world_pos_x, y=world_pos_y, z=0.0)
             self.carla_world.debug.draw_point(location, size = 0.1, color = carla.Color(*white), life_time=0.0, persistent_lines=True)
             
             # create a vehicle button and draw the button
             actor_map_pos = self.world_to_local_pixel((world_pos_x,world_pos_y))
-            vehicle_button = VehicleButton(self.intersection_id,"1",actor_map_pos[0],actor_map_pos[1],world_pos_x,world_pos_y,0)
+            vehicle_button = VehicleButton(self.intersection_id,uniquename,actor_map_pos[0],actor_map_pos[1],world_pos_x,world_pos_y,0)
             vehicle_button.button.add(fade=False)
-            self.vehicle_dict["1"] = vehicle_button
+            self.vehicle_dict[uniquename] = vehicle_button
+            
+            spawn_vehicle_config(self.intersection_id,uniquename,actor_map_pos,(world_pos_x,world_pos_y), 0)
         
         intersection_remove_display(self.intersection_id,"Spawn")
         
@@ -326,6 +348,7 @@ class Intersection(object):
         while True:
         
             event = pygame.event.wait()
+            
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if pygame.mouse.get_pressed()[0]:
                     mouse = event.pos
@@ -339,7 +362,6 @@ class Intersection(object):
                         
                         self.spawn_label = sgc.Label(pos =  (mouse[0],mouse[1]), text = "x: " + str(spawn_point_world_pos[0]) + " y: " + str(spawn_point_world_pos[1]))
                     break
-                    
 
         
     def create_intersection_panel(self):
@@ -362,12 +384,49 @@ class Intersection(object):
         
     def remove_intersection_page(self):
         self.spawn_actor_button.remove(fade=False)
+    
+    def create_vehicle_panel(self):
+        self.vehicle_name_text = sgc.Label(pos = (int(self.left_width/2),100))
+        self.vehicle_position_x_text = sgc.InputBox(label="x:  ",pos = (50,200),label_side = "left")
+        self.vehicle_position_y_text = sgc.InputBox(label="y:  ",pos = (50,300),label_side = "left")
+        self.vehicle_to_intersection_button = sgc.Button( label="Back", pos=(0, 0))
+        self.vehicle_to_intersection_button.on_click = self.vehicle_to_intersection_callback
         
+    def render_vehicle_panel(self):
+        uniquename = get_vehicle_to_display(self.intersection_id)
+        self.vehicle_name_text.text = uniquename
+        self.vehicle_name_text.add(fade=False)
+        vehicle_settings = get_vehicle_settings(self.intersection_id, uniquename)
+        
+
+        self.vehicle_position_x_text.text = vehicle_settings["world_x"]
+        self.vehicle_position_x_text.add(fade=False)
+        self.vehicle_position_y_text.text = vehicle_settings["world_y"]
+        self.vehicle_position_y_text.add(fade=False)
+        
+        self.vehicle_to_intersection_button.add(fade=False)
+    
+    def remove_vehicle_panel(self):
+        #display_vehicle_config(self.intersection_id, "None") # no vehicle will be shown
+        self.vehicle_name_text.text = ""
+        self.vehicle_name_text.remove(fade=False)
+        self.vehicle_position_x_text.text = ""
+        self.vehicle_position_x_text.remove(fade=False)
+        self.vehicle_position_y_text.text = ""
+        self.vehicle_position_y_text.remove(fade=False)
+        self.vehicle_to_intersection_button.remove(fade=False)
+
+        
+    
+    def vehicle_to_intersection_callback(self):
+        intersection_remove_display(self.intersection_id,"Vehicle") # request to call the remove_vehicle_panel function
+        intersection_change_display_mode(self.intersection_id, "Intersection")
+    
     def render_all_vehicle(self):
         for uniquename in self.vehicle_dict:
             self.vehicle_dict[uniquename].button.add(fade=True)
     
-    def remove_all_vehicle(self):
+    def remove_all_vehicle_from_display(self):
         for uniquename in self.vehicle_dict:
             self.vehicle_dict[uniquename].button.remove(fade=True)
         
@@ -390,6 +449,9 @@ class Intersection(object):
         elif display_to_remove == "Spawn":
             self.remove_spawn_page()
         
+        elif display_to_remove == "Vehicle":
+            self.remove_vehicle_panel()
+        
         self.render_intersection_base()
         
         
@@ -397,7 +459,10 @@ class Intersection(object):
             self.render_intersection_panel()
         elif display_mode == "Spawn":
             self.render_spawn_panel()
+        elif display_mode == "Vehicle":
+            self.render_vehicle_panel()
             
+        intersection_remove_display(self.intersection_id,"None")
 
         
     
@@ -411,10 +476,15 @@ class VehicleButton(object):
         self.yaw = yaw
         self.uniquename = uniquename
         self.intersection_id = intersection_id
+        self.button.on_click = self.vehicle_button_callback
         
     def vehicle_button_callback(self):
+        print("clicking on button")
         display_vehicle_config(self.intersection_id, self.uniquename)
-
+        mode_to_remove = intersection_get_display_mode(self.intersection_id)
+        
+        intersection_remove_display(self.intersection_id,mode_to_remove)
+        intersection_change_display_mode(self.intersection_id, "Vehicle")
 
 
 
