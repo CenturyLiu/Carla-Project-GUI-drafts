@@ -317,8 +317,7 @@ class Intersection(object):
         # call back function for spawn an actor
         # here assume vehicle is the only actor
         print("trying to spawn vehicle")
-        intersection_change_display_mode(self.intersection_id, "Intersection") # after spawning actor, we view the setting of this actor
-                                                                               # change display mode to "Vehicle"
+        
         # get the global position of the actor
         # note: no error check for non-float type input is applied
         world_pos_x = self.spawn_x_text.text
@@ -338,7 +337,11 @@ class Intersection(object):
             self.vehicle_dict[uniquename] = vehicle_button
             
             spawn_vehicle_config(self.intersection_id,uniquename,actor_map_pos,(world_pos_x,world_pos_y), 0)
-        
+            intersection_change_display_mode(self.intersection_id, "Vehicle") # after spawning actor, we view the setting of this actor
+                                                                               # change display mode to "Vehicle"
+            display_vehicle_config(self.intersection_id, uniquename)
+        else:
+            intersection_change_display_mode(self.intersection_id, "Intersection") # give up spawning, back to intersection panel
         intersection_remove_display(self.intersection_id,"Spawn")
         
     def interactive_mouse_callback(self):
