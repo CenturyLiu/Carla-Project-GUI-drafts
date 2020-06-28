@@ -473,7 +473,10 @@ class Intersection(object):
     
 class VehicleButton(object):
     def __init__(self, intersection_id, uniquename, img_x, img_y, map_x, map_y, yaw):
-        self.button = sgc.Button(label=uniquename, pos = (img_x,img_y))
+        btn_surface = pygame.Surface((32, 32))
+        pygame.draw.polygon(btn_surface,bright_green,[(1,1),(1,31),(21,31),(31,16),(21,1)])
+        
+        self.button = sgc.Button(surf = btn_surface,label=uniquename, pos = (img_x - int(btn_surface.get_width() / 2),img_y - int(btn_surface.get_height() / 2)))
         self.map_x = map_x
         self.map_y = map_y
         self.yaw = yaw
