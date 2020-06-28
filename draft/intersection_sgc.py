@@ -174,6 +174,7 @@ class Intersection(object):
         self.carla_world = carla_world
         self.intersection_id = str(intersection_id)
         
+        
         # basic settings
         self.guiDisplay = guiDisplay
         self.map_surface = map_surface
@@ -243,6 +244,10 @@ class Intersection(object):
         self.create_intersection_panel()
         self.create_spawn_panel()
         self.create_vehicle_panel()
+        
+        # set the spectator view inside carla simulator
+        self.spectator = self.carla_world.get_spectator()
+        self.spectator.set_transform(carla.Transform(carla.Location(x=self.world_pos[0], y=self.world_pos[1], z=50.0), carla.Rotation(pitch=-90.0, yaw= -90.0, roll=0.0)))
     
     def world_to_local_pixel(self,world_pos):
         width_diff = (world_pos[0] - self.world_pos[0]) / self.meter_per_width_pixel # unit: pixel
