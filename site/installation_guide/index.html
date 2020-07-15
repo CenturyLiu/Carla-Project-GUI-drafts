@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Installation Guide - UMTRI CARLA GUI BACKEND GUIDE</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Installation Guide";
+    var mkdocs_page_input_path = "installation_guide.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> UMTRI CARLA GUI BACKEND GUIDE</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul class="current">
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Installation Guide</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#install-essential-python-modules">Install essential python modules</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#download-and-test-backend-code">Download and test backend code</a>
+    </li>
+    </ul>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">UMTRI CARLA GUI BACKEND GUIDE</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Installation Guide</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="installation-guide">Installation guide</h1>
+<p>This page discusses how to install and use the code inside the backend. </p>
+<h2 id="install-essential-python-modules">Install essential python modules</h2>
+<p>The backend uses the following python modules:</p>
+<ul>
+<li>
+<p>CARLA <br />
+    Follow instructions on <a href="https://carla.readthedocs.io/en/latest/">CARLA document</a> to install CARLA simulator</p>
+</li>
+<li>
+<p>configobj <br />
+    Follow instructions on <a href="https://configobj.readthedocs.io/en/latest/configobj.html">configobj document</a> to install configobj</p>
+</li>
+<li>
+<p>Python-control <br />
+    Follow instructions on <a href="https://python-control.readthedocs.io/en/0.8.3/intro.html#">Python-control</a> to install Python-control</p>
+</li>
+<li>
+<p>scipy <br />
+    Follow instructions on <a href="https://www.scipy.org/install.html">scipy/installation</a> to install scipy</p>
+</li>
+</ul>
+<h2 id="download-and-test-backend-code">Download and test backend code</h2>
+<ul>
+<li>
+<p>Test the backend only</p>
+<p>Download the <a href="https://github.com/CenturyLiu/Carla-GUI/tree/master/backend">GUI Backend</a> and put it in any directory you like as long as the python command <code>import carla</code> works.</p>
+<p>The test file for urban backend is "intersection_backend.py". Open CARLA simulator and run <code>python intersection_backend.py</code> to verify the backend has been successfully installed.</p>
+<p>Note: the first time you run the code, the following error may occur:</p>
+<pre><code>RuntimeError: time-out of 10000ms while waiting for the simulator, make sure the simulator is ready and connected to localhost:2000
+
+UnboundLocalError: local variable 'env' referenced before assignment
+</code></pre>
+<p>This is because the carla client failed to connect to the carla server. Just run the code again and it should be fine.</p>
+</li>
+</ul>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href=".." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
